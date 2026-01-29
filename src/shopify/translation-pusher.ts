@@ -122,6 +122,11 @@ export class ShopifyTranslationPusher {
     let completed = 0;
     let failed = 0;
 
+    // Handle empty batches
+    if (batches.length === 0) {
+      return results;
+    }
+
     // Process batches sequentially to avoid rate limiting
     for (let i = 0; i < batches.length; i += batchSize) {
       const chunk = batches.slice(i, Math.min(i + batchSize, batches.length));
@@ -153,7 +158,7 @@ export class ShopifyTranslationPusher {
           total: batches.length,
           completed,
           failed,
-          percentage: Math.round((completed + failed) / batches.length * 100),
+          percentage: batches.length > 0 ? Math.round((completed + failed) / batches.length * 100) : 0,
         };
         onProgress(progress);
       }
