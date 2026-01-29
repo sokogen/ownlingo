@@ -73,19 +73,20 @@ enum TranslationStatus {
 
 // Translated content with status
 model Translation {
-  id              String            @id @default(cuid())
-  shopId          String
-  languageId      String
-  contentHashId   String
-  translatedText  String
-  status          TranslationStatus @default(PENDING)
-  aiProvider      String?           // e.g. "openai", "anthropic", "google"
-  aiModel         String?           // e.g. "gpt-4", "claude-3-opus"
-  tokensUsed      Int?
-  errorMessage    String?
+  id               String            @id @default(cuid())
+  shopId           String
+  languageId       String
+  contentHashId    String
+  sourceContentHash String           // Hash of source content at translation time (for outdated detection)
+  translatedText   String
+  status           TranslationStatus @default(PENDING)
+  aiProvider       String?           // e.g. "openai", "anthropic", "google"
+  aiModel          String?           // e.g. "gpt-4", "claude-3-opus"
+  tokensUsed       Int?
+  errorMessage     String?
   translationJobId String?
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
 
   shop           Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
   language       Language        @relation(fields: [languageId], references: [id], onDelete: Cascade)
