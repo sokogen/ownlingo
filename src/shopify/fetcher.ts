@@ -101,7 +101,7 @@ export class ShopifyContentFetcher {
     let pageCount = 0;
 
     while (hasNextPage && pageCount < maxPages) {
-      const response = await this.client.query<TranslatableResourcesResponse>(
+      const response: TranslatableResourcesResponse = await this.client.query<TranslatableResourcesResponse>(
         TRANSLATABLE_RESOURCES_QUERY,
         {
           resourceType,
@@ -111,7 +111,7 @@ export class ShopifyContentFetcher {
       );
 
       const edges = response.translatableResources.edges;
-      const pageInfo = response.translatableResources.pageInfo;
+      const pageInfo: PageInfo = response.translatableResources.pageInfo;
 
       // Add resources from this page
       for (const edge of edges) {

@@ -180,7 +180,7 @@ describe('ContentHashRepository', () => {
         .mockResolvedValueOnce({ id: '2', hash: 'old-hash' })
         .mockResolvedValueOnce({
           id: '3',
-          hash: '50d858e0985ecc7f60418aaf0cc5ab587f42c2570a884095a9e8ccacd0f6545c', // SHA-256 of 'unchanged'
+          hash: 'aaa8d3c8d74ad3e8f6b1772aa9c7e0eaa528cb42fc93599ce2f125b00d4c424c', // SHA-256 of 'unchanged'
         });
 
       (prisma.contentHash.create as jest.Mock).mockResolvedValue({ id: '1', hash: 'new-hash' });
@@ -278,7 +278,7 @@ describe('ContentHashRepository', () => {
 
     it('should return false when content is unchanged', async () => {
       const content = 'Unchanged Content';
-      const hash = 'f50f09cf1ae9c77696c54fcf5f1bc81b50da4f67f68b31dd8efac88a0e016023'; // SHA-256
+      const hash = '23d973e9e3085643b175ed9af91b62ddc7c2a652a5ac3e06bf484ba596b1aeb3'; // SHA-256 of 'Unchanged Content'
 
       (prisma.contentHash.findUnique as jest.Mock).mockResolvedValue({
         id: 'hash-1',
