@@ -28,20 +28,20 @@ describe('Translation Queue UI', () => {
   describe('Job listing', () => {
     it('should list all jobs', () => {
       // Create test jobs
-      jobCreator.createFullJob('en', ['es', 'fr']);
-      jobCreator.createFullJob('en', ['de']);
+      jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['es', 'fr'] });
+      jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['de'] });
 
       const stmt = db.prepare('SELECT * FROM translation_jobs ORDER BY created_at DESC');
       const jobs = stmt.all();
 
       expect(jobs).toHaveLength(2);
-      expect(jobs[0].type).toBe('full');
-      expect(jobs[0].status).toBe('pending');
+      expect((jobs[0] as any).type).toBe('full');
+      expect((jobs[0] as any).status).toBe('pending');
     });
 
     it('should filter jobs by status', () => {
-      const job1 = jobCreator.createFullJob('en', ['es']);
-      const job2 = jobCreator.createFullJob('en', ['fr']);
+      const job1 = jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['es'] });
+      const job2 = jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['fr'] });
 
       // Update one job to running
       const stmt = db.prepare('UPDATE translation_jobs SET status = ? WHERE id = ?');
@@ -76,13 +76,18 @@ describe('Translation Queue UI', () => {
       );
 
       // Create a job
-      const jobId = jobCreator.createSingleJob('res1', 'en', 'es');
+      const jobId = jobCreator.createJob({
+        type: 'single',
+        sourceLocale: 'en',
+        targetLocales: ['es'],
+        resourceId: 'res1'
+      });
 
       // Get job
       const jobStmt = db.prepare('SELECT * FROM translation_jobs WHERE id = ?');
       const job = jobStmt.get(jobId);
       expect(job).toBeDefined();
-      expect(job.id).toBe(jobId);
+      expect((job as any).id).toBe(jobId);
 
       // Get job items
       const itemsStmt = db.prepare(`
@@ -96,12 +101,29 @@ describe('Translation Queue UI', () => {
       `);
       const items = itemsStmt.all(jobId);
       expect(items).toHaveLength(1);
-      expect(items[0].title).toBe('Test Product');
-      expect(items[0].resource_type).toBe('product');
+      expect((items[0] as any).title).toBe('Test Product');
+      expect((items[0] as any).resource_type).toBe('product');
     });
 
     it('should get job error logs', () => {
-      const jobId = jobCreator.createFullJob('en', ['es']);
+      // Create a resource first
+      const resourceStmt = db.prepare(`
+        INSERT INTO resources (id, shopify_id, resource_type, title, content, content_hash, locale, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      resourceStmt.run(
+        'res_log',
+        'shopify_456',
+        'product',
+        'Test Product',
+        'Product description',
+        'hash456',
+        'en',
+        Date.now(),
+        Date.now()
+      );
+
+      const jobId = jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['es'] });
 
       // Create a failed item
       const itemStmt = db.prepare(`
@@ -112,7 +134,7 @@ describe('Translation Queue UI', () => {
       itemStmt.run(
         'item1',
         jobId,
-        'res1',
+        'res_log',
         'es',
         'failed',
         3,
@@ -136,17 +158,34 @@ describe('Translation Queue UI', () => {
 
   describe('Job actions', () => {
     it('should cancel a job', async () => {
-      const jobId = jobCreator.createFullJob('en', ['es']);
+      const jobId = jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['es'] });
 
       await jobRunner.cancelJob(jobId);
 
       const stmt = db.prepare('SELECT * FROM translation_jobs WHERE id = ?');
       const job = stmt.get(jobId);
-      expect(job.status).toBe('cancelled');
+      expect((job as any).status).toBe('cancelled');
     });
 
     it('should retry failed items', async () => {
-      const jobId = jobCreator.createFullJob('en', ['es']);
+      // Create a resource first
+      const resourceStmt = db.prepare(`
+        INSERT INTO resources (id, shopify_id, resource_type, title, content, content_hash, locale, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      resourceStmt.run(
+        'res_retry',
+        'shopify_789',
+        'product',
+        'Test Product',
+        'Product description',
+        'hash789',
+        'en',
+        Date.now(),
+        Date.now()
+      );
+
+      const jobId = jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['es'] });
 
       // Create a failed item
       const itemStmt = db.prepare(`
@@ -157,7 +196,7 @@ describe('Translation Queue UI', () => {
       itemStmt.run(
         'item1',
         jobId,
-        'res1',
+        'res_retry',
         'es',
         'failed',
         3,
@@ -176,19 +215,36 @@ describe('Translation Queue UI', () => {
       // Check item status
       const checkItemStmt = db.prepare('SELECT * FROM translation_job_items WHERE id = ?');
       const item = checkItemStmt.get('item1');
-      expect(item.status).toBe('pending');
-      expect(item.retry_count).toBe(0);
+      expect((item as any).status).toBe('pending');
+      expect((item as any).retry_count).toBe(0);
 
       // Check job status
       const checkJobStmt = db.prepare('SELECT * FROM translation_jobs WHERE id = ?');
       const job = checkJobStmt.get(jobId);
-      expect(job.status).toBe('pending');
+      expect((job as any).status).toBe('pending');
     });
   });
 
   describe('Real-time updates', () => {
     it('should emit progress events', (done) => {
-      const jobId = jobCreator.createFullJob('en', ['es']);
+      // Create a resource first
+      const resourceStmt = db.prepare(`
+        INSERT INTO resources (id, shopify_id, resource_type, title, content, content_hash, locale, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      resourceStmt.run(
+        'res_progress',
+        'shopify_999',
+        'product',
+        'Test Product',
+        'Product description',
+        'hash999',
+        'en',
+        Date.now(),
+        Date.now()
+      );
+
+      const jobId = jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['es'] });
 
       jobRunner.on('progress', (data) => {
         expect(data.jobId).toBe(jobId);
@@ -205,7 +261,7 @@ describe('Translation Queue UI', () => {
         (id, job_id, resource_id, target_locale, status, retry_count, max_retries, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      itemStmt.run('item1', jobId, 'res1', 'es', 'pending', 0, 3, Date.now(), Date.now());
+      itemStmt.run('item1', jobId, 'res_progress', 'es', 'pending', 0, 3, Date.now(), Date.now());
 
       // Trigger progress calculation
       const stmt = db.prepare(`
@@ -218,7 +274,7 @@ describe('Translation Queue UI', () => {
     });
 
     it('should emit job completion events', (done) => {
-      const jobId = jobCreator.createFullJob('en', ['es']);
+      const jobId = jobCreator.createJob({ type: 'full', sourceLocale: 'en', targetLocales: ['es'] });
 
       jobRunner.on('job:completed', (data) => {
         expect(data.jobId).toBe(jobId);

@@ -56,8 +56,8 @@ describe('TranslationJobRunner', () => {
       const db = schema.getDatabase();
       const job = db.prepare('SELECT * FROM translation_jobs WHERE id = ?').get(jobId);
       expect(job).toBeTruthy();
-      expect(job.type).toBe('full');
-      expect(job.status).toBe('pending');
+      expect((job as any).type).toBe('full');
+      expect((job as any).status).toBe('pending');
 
       // Should create items for all resources * target locales
       const items = db.prepare('SELECT * FROM translation_job_items WHERE job_id = ?').all(jobId);
@@ -76,7 +76,7 @@ describe('TranslationJobRunner', () => {
       const db = schema.getDatabase();
       const items = db.prepare('SELECT * FROM translation_job_items WHERE job_id = ?').all(jobId);
       expect(items.length).toBe(1); // 1 resource * 1 locale
-      expect(items[0].resource_id).toBe('res1');
+      expect((items[0] as any).resource_id).toBe('res1');
     });
 
     test('should create incremental translation job', () => {
@@ -116,8 +116,8 @@ describe('TranslationJobRunner', () => {
 
       const db = schema.getDatabase();
       const job = db.prepare('SELECT * FROM translation_jobs WHERE id = ?').get(jobId);
-      expect(job.status).toBe('completed');
-      expect(job.progress).toBe(100);
+      expect((job as any).status).toBe('completed');
+      expect((job as any).progress).toBe(100);
       expect(progressEvents).toBeGreaterThan(0);
       expect(completedEvents).toBe(1);
     });
@@ -164,7 +164,7 @@ describe('TranslationJobRunner', () => {
 
       const db = schema.getDatabase();
       const job = db.prepare('SELECT * FROM translation_jobs WHERE id = ?').get(jobId);
-      expect(job.status).toBe('cancelled');
+      expect((job as any).status).toBe('cancelled');
       expect(cancelledEvents).toBe(1);
     });
   });
@@ -189,8 +189,8 @@ describe('TranslationJobRunner', () => {
       await runner.retryFailedItems(jobId);
 
       const items = db.prepare('SELECT * FROM translation_job_items WHERE job_id = ?').all(jobId);
-      expect(items[0].status).toBe('pending');
-      expect(items[0].retry_count).toBe(0);
+      expect((items[0] as any).status).toBe('pending');
+      expect((items[0] as any).retry_count).toBe(0);
     });
   });
 

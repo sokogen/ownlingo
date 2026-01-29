@@ -300,7 +300,7 @@ export class TranslationJobRunner extends EventEmitter {
     const values = Object.values(updates);
 
     let sql = `UPDATE translation_jobs SET status = ?, updated_at = ?`;
-    const params = [status, Date.now()];
+    const params: any[] = [status, Date.now()];
 
     if (fields) {
       sql += `, ${fields}`;
@@ -322,7 +322,7 @@ export class TranslationJobRunner extends EventEmitter {
     const values = Object.values(updates);
 
     let sql = `UPDATE translation_job_items SET status = ?, updated_at = ?`;
-    const params = [status, Date.now()];
+    const params: any[] = [status, Date.now()];
 
     if (fields) {
       sql += `, ${fields}`;
