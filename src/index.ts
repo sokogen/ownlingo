@@ -17,6 +17,18 @@ export {
   SyncAggregation,
   UntranslatedContent,
 } from './db/sync-status';
+export {
+  WebhookHandler,
+  WebhookProcessResult,
+  WebhookHandlerOptions,
+  WebhookPayload,
+} from './webhooks/handler';
+export {
+  WebhookRegistry,
+  WebhookSubscription,
+  RegisterWebhooksOptions,
+  WebhookTopic,
+} from './webhooks/registry';
 
 // Re-export Prisma client for convenience
 export { PrismaClient } from '@prisma/client';

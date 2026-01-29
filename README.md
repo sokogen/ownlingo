@@ -29,6 +29,17 @@ Robust change detection and synchronization tracking:
 
 See [docs/content-hash-system.md](docs/content-hash-system.md) for detailed documentation.
 
+### ✅ Webhooks Handler (ol-010)
+
+Real-time content change detection via Shopify webhooks:
+- Subscribe to Shopify webhooks (PRODUCTS_UPDATE, COLLECTIONS_UPDATE, etc.)
+- Automatic content hash updates when webhooks are received
+- Mark outdated translations when source content changes
+- Optional auto-trigger translation jobs for changed content
+- Webhook registration and management
+
+See [docs/webhooks-handler.md](docs/webhooks-handler.md) for detailed documentation.
+
 ## Quick Start
 
 ```bash
@@ -56,20 +67,28 @@ src/
 ├── db/
 │   ├── content-hash.ts    # Content hash repository
 │   └── sync-status.ts     # Sync status tracking
+├── webhooks/
+│   ├── handler.ts         # Webhook processing
+│   ├── registry.ts        # Webhook subscription management
+│   └── index.ts           # Webhooks exports
 └── index.ts               # Main exports
 
 tests/
 ├── shopify-fetcher.test.ts
 ├── content-hash.test.ts
-└── sync-status.test.ts
+├── sync-status.test.ts
+├── webhook-handler.test.ts
+└── webhook-registry.test.ts
 
 examples/
 ├── fetch-content.ts       # Shopify fetcher example
-└── content-hash-system.ts # Content hash system example
+├── content-hash-system.ts # Content hash system example
+└── webhooks-example.ts    # Webhooks handler example
 
 docs/
 ├── shopify-content-fetcher.md
-└── content-hash-system.md
+├── content-hash-system.md
+└── webhooks-handler.md
 ```
 
 ## Environment Variables
@@ -130,6 +149,7 @@ console.log(`Synced: ${agg.synced}/${agg.total}`);
 - [ ] ol-006: Shopify Translation Push
 - [ ] ol-007: AI Provider Integration
 - [ ] ol-008: Translation Quality Checks
+- [x] ol-010: Webhooks Handler
 
 ## License
 
