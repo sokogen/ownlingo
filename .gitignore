@@ -4,5 +4,6 @@
 .logs/
 .env
 node_modules/
+coverage/
 
 /generated/prisma
