@@ -15,6 +15,7 @@ Shopify content translation automation system with background job processing.
 - **Concurrency Control**: Respect AI provider rate limits
 - **Translation Caching**: Avoid retranslating unchanged content
 - **Content Hash System**: Detect content changes efficiently
+- **Web UI**: Real-time translation queue monitoring and management interface
 
 ## Installation
 
@@ -145,6 +146,54 @@ const hash = ContentHasher.hash({
 // Check if content changed
 const hasChanged = ContentHasher.hasChanged(oldHash, newContent);
 ```
+
+## Translation Queue UI
+
+A web-based interface for monitoring and managing translation jobs in real-time.
+
+### Starting the Web UI
+
+```bash
+npm run web
+```
+
+Then open http://localhost:3000 in your browser.
+
+### Features
+
+- **Real-time Updates**: Jobs and progress update automatically via Server-Sent Events
+- **Job Filtering**: View active, pending, completed, or all jobs
+- **Progress Bars**: Visual progress indicators for each job
+- **Job Details**: Click any job to see detailed information:
+  - Job metadata (type, status, locales, timestamps)
+  - Item-by-item progress
+  - Error logs for failed items
+- **Job Actions**:
+  - Cancel running or pending jobs
+  - Retry failed items in completed jobs
+
+### API Endpoints
+
+The web server exposes the following REST API endpoints:
+
+- `GET /api/jobs` - List all jobs
+- `GET /api/jobs/:id` - Get job details
+- `GET /api/jobs/:id/items` - Get job items with resource info
+- `GET /api/jobs/:id/logs` - Get error logs for a job
+- `POST /api/jobs/:id/cancel` - Cancel a job
+- `POST /api/jobs/:id/retry` - Retry failed items in a job
+- `GET /api/events` - Server-Sent Events stream for real-time updates
+
+### Real-time Events
+
+The UI receives real-time updates for:
+
+- Job progress updates
+- Job completion
+- Job failures
+- Job cancellation
+- Item completion
+- Item failures
 
 ## Architecture
 
