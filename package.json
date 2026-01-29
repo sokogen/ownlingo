@@ -1,0 +1,28 @@
+{
+  "name": "ownlingo",
+  "version": "1.0.0",
+  "description": "AI-powered translation service with multi-provider support",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": ["translation", "ai", "openai", "anthropic", "gemini"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^25.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.72.0",
+    "@google/generative-ai": "^0.24.1",
+    "openai": "^6.17.0"
+  }
+}
