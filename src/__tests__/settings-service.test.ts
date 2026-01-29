@@ -13,6 +13,7 @@ const mockPrisma = {
     upsert: jest.fn(),
     delete: jest.fn(),
     findFirst: jest.fn(),
+    findUnique: jest.fn(),
   },
 } as unknown as PrismaClient;
 
@@ -114,6 +115,7 @@ describe('SettingsService', () => {
         temperature: null,
       };
 
+      (mockPrisma.aIProviderConfig.findUnique as jest.Mock).mockResolvedValue(null);
       (mockPrisma.aIProviderConfig.updateMany as jest.Mock).mockResolvedValue({ count: 0 });
       (mockPrisma.aIProviderConfig.upsert as jest.Mock).mockResolvedValue(mockConfig);
 
@@ -142,6 +144,14 @@ describe('SettingsService', () => {
     });
 
     it('should update existing provider config', async () => {
+      const existingConfig = {
+        provider: 'anthropic',
+        apiKey: 'sk-ant-old-key',
+        model: 'claude-3-opus',
+        isEnabled: true,
+        isDefault: false,
+      };
+
       const mockConfig = {
         provider: 'anthropic',
         apiKey: 'sk-ant-updated-key',
@@ -152,6 +162,7 @@ describe('SettingsService', () => {
         temperature: 0.5,
       };
 
+      (mockPrisma.aIProviderConfig.findUnique as jest.Mock).mockResolvedValue(existingConfig);
       (mockPrisma.aIProviderConfig.upsert as jest.Mock).mockResolvedValue(mockConfig);
 
       const result = await service.updateProviderSettings({
@@ -238,6 +249,44 @@ describe('SettingsService', () => {
           apiKey: 'sk-test-key',
         })
       ).rejects.toThrow(SettingsValidationError);
+    });
+
+    it('should require API key when creating new provider', async () => {
+      (mockPrisma.aIProviderConfig.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(
+        service.updateProviderSettings({
+          shopId: 'shop-1',
+          provider: 'openai',
+          model: 'gpt-4',
+        })
+      ).rejects.toThrow(SettingsValidationError);
+    });
+
+    it('should allow updating provider without API key', async () => {
+      const existingConfig = {
+        provider: 'openai',
+        apiKey: 'sk-existing-key',
+        model: 'gpt-3.5-turbo',
+        isEnabled: true,
+        isDefault: false,
+      };
+
+      const updatedConfig = {
+        ...existingConfig,
+        model: 'gpt-4',
+      };
+
+      (mockPrisma.aIProviderConfig.findUnique as jest.Mock).mockResolvedValue(existingConfig);
+      (mockPrisma.aIProviderConfig.upsert as jest.Mock).mockResolvedValue(updatedConfig);
+
+      const result = await service.updateProviderSettings({
+        shopId: 'shop-1',
+        provider: 'openai',
+        model: 'gpt-4',
+      });
+
+      expect(result.model).toBe('gpt-4');
     });
   });
 

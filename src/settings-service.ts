@@ -64,6 +64,24 @@ export class SettingsService {
    * Update or create provider settings
    */
   async updateProviderSettings(input: UpdateProviderSettingsInput): Promise<ProviderSettings> {
+    // Check if provider exists to determine if this is a create or update
+    const existingConfig = await this.prisma.aIProviderConfig.findUnique({
+      where: {
+        shopId_provider: {
+          shopId: input.shopId,
+          provider: input.provider,
+        },
+      },
+    });
+
+    // For new providers, API key is required
+    if (!existingConfig && !input.apiKey) {
+      throw new SettingsValidationError(
+        'API key is required when creating a new provider configuration',
+        'apiKey'
+      );
+    }
+
     this.validateProviderSettings(input);
 
     // If setting as default, unset other defaults first
@@ -97,7 +115,7 @@ export class SettingsService {
       create: {
         shopId: input.shopId,
         provider: input.provider,
-        apiKey: input.apiKey || '',
+        apiKey: input.apiKey!,
         model: input.model,
         maxTokens: input.maxTokens,
         temperature: input.temperature,
