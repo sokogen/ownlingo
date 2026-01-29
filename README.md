@@ -4,6 +4,12 @@ Shopify content translation automation system with background job processing.
 
 ## Features
 
+- **Dashboard UI**: Monitor translation status with statistics and content lists
+  - Translation status overview (progress, counts by status)
+  - Statistics by resource type (products, collections, etc.)
+  - List untranslated and outdated content
+  - Filter by content type, language, status
+  - Quick actions to trigger translation jobs
 - **Background Job System**: Asynchronous translation processing with priority queue
 - **Job Types**:
   - `full`: Translate all content
@@ -15,6 +21,13 @@ Shopify content translation automation system with background job processing.
 - **Concurrency Control**: Respect AI provider rate limits
 - **Translation Caching**: Avoid retranslating unchanged content
 - **Content Hash System**: Detect content changes efficiently
+
+## Requirements
+
+- **Node.js**: v18.x - v22.x (v23+ has compatibility issues with better-sqlite3)
+- **TypeScript**: ^5.0.0
+
+> **Note**: If you encounter compilation errors with better-sqlite3, ensure you're using Node.js v18-v22. Node v25+ requires C++20 which may not be fully supported yet.
 
 ## Installation
 
@@ -172,6 +185,60 @@ Job Created → Job Picked Up → Items Processing → Progress Updates → Job 
                                       ↓
                               Retry on Failure (up to max retries)
 ```
+
+### Dashboard UI
+
+Monitor translation status and manage content with the Dashboard Service:
+
+```typescript
+import { DashboardService } from 'ownlingo';
+
+const dashboard = new DashboardService(db);
+
+// Get translation statistics
+const stats = dashboard.getOverallStats('en', 'fr');
+console.log(`Progress: ${stats.progress}%`);
+console.log(`Translated: ${stats.translated}/${stats.total}`);
+console.log(`Outdated: ${stats.outdated}`);
+
+// Get statistics by resource type (product, collection, etc.)
+const statsByType = dashboard.getStatsByType('en', 'fr');
+statsByType.forEach(typeStats => {
+  console.log(`${typeStats.resourceType}: ${typeStats.stats.progress}%`);
+});
+
+// Find untranslated content
+const untranslated = dashboard.findUntranslated('en', 'fr', {
+  resourceType: 'product', // Optional filter
+  limit: 10,
+  offset: 0
+});
+
+// Find outdated content (needs re-translation)
+const outdated = dashboard.findOutdated('en', 'fr', {
+  limit: 10
+});
+
+// Quick actions: Translate selected resources
+const selectedIds = untranslated.slice(0, 5).map(r => r.resourceId);
+const job = jobCreator.createSingleResourceJobs(selectedIds, ['fr'], {
+  priority: 5 // High priority for user actions
+});
+
+// Quick actions: Translate all untranslated content
+const translateAllJob = jobCreator.createIncrementalJob(['fr', 'de'], {
+  priority: 3
+});
+
+// Get complete dashboard data (API-ready)
+const dashboardData = dashboard.getDashboardData('en', 'fr', {
+  resourceType: 'product', // Optional filter
+  limit: 20
+});
+// Returns: { overallStats, statsByType, untranslated, outdated }
+```
+
+See `examples/dashboard-usage.ts` for a complete example.
 
 ## Testing
 
