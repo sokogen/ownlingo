@@ -20,7 +20,7 @@ export class ShopifyGraphQLClient {
       apiSecretKey: 'dummy-secret',
       scopes: [],
       hostName: this.config.shop.replace(/^https?:\/\//, ''),
-      apiVersion: config.apiVersion || '2024-01',
+      apiVersion: (config.apiVersion || '2024-01') as any,
       isEmbeddedApp: false,
     });
 
