@@ -1,0 +1,8 @@
+.runtime/
+.claude/
+.beads/
+.logs/
+.env
+node_modules/
+
+/generated/prisma

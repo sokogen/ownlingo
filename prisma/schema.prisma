@@ -1,0 +1,148 @@
+// Prisma schema for Ownlingo translation system
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Shopify shop configuration
+model Shop {
+  id        String   @id @default(cuid())
+  domain    String   @unique // e.g. "mystore.myshopify.com"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  languages        Language[]
+  contentHashes    ContentHash[]
+  translations     Translation[]
+  translationJobs  TranslationJob[]
+  aiProviderConfig AIProviderConfig?
+
+  @@map("shops")
+}
+
+// Supported languages per shop
+model Language {
+  id        String   @id @default(cuid())
+  shopId    String
+  locale    String   // ISO 639-1 code, e.g. "en", "fr", "de"
+  name      String   // Display name, e.g. "English", "French"
+  isDefault Boolean  @default(false)
+  isEnabled Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop         Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  translations Translation[]
+
+  @@unique([shopId, locale])
+  @@map("languages")
+}
+
+// Hash of original content for change detection
+model ContentHash {
+  id           String   @id @default(cuid())
+  shopId       String
+  resourceType String   // e.g. "product", "collection", "page", "article"
+  resourceId   String   // Shopify resource ID
+  fieldName    String   // e.g. "title", "description", "body_html"
+  hash         String   // SHA-256 hash of original content
+  content      String   // Original content text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  shop         Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  translations Translation[]
+
+  @@unique([shopId, resourceType, resourceId, fieldName])
+  @@index([shopId, resourceType])
+  @@index([hash])
+  @@map("content_hashes")
+}
+
+enum TranslationStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  NEEDS_REVIEW
+}
+
+// Translated content with status
+model Translation {
+  id              String            @id @default(cuid())
+  shopId          String
+  languageId      String
+  contentHashId   String
+  translatedText  String
+  status          TranslationStatus @default(PENDING)
+  aiProvider      String?           // e.g. "openai", "anthropic", "google"
+  aiModel         String?           // e.g. "gpt-4", "claude-3-opus"
+  tokensUsed      Int?
+  errorMessage    String?
+  translationJobId String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  shop           Shop            @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  language       Language        @relation(fields: [languageId], references: [id], onDelete: Cascade)
+  contentHash    ContentHash     @relation(fields: [contentHashId], references: [id], onDelete: Cascade)
+  translationJob TranslationJob? @relation(fields: [translationJobId], references: [id], onDelete: SetNull)
+
+  @@unique([contentHashId, languageId])
+  @@index([shopId, status])
+  @@index([translationJobId])
+  @@map("translations")
+}
+
+enum JobStatus {
+  QUEUED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Batch job tracking
+model TranslationJob {
+  id             String    @id @default(cuid())
+  shopId         String
+  status         JobStatus @default(QUEUED)
+  totalItems     Int       @default(0)
+  completedItems Int       @default(0)
+  failedItems    Int       @default(0)
+  resourceTypes  String[]  // Filter: which resource types to translate
+  targetLocales  String[]  // Filter: which languages to translate to
+  startedAt      DateTime?
+  completedAt    DateTime?
+  errorMessage   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  shop         Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  translations Translation[]
+
+  @@index([shopId, status])
+  @@map("translation_jobs")
+}
+
+// AI API keys and settings per provider
+model AIProviderConfig {
+  id          String   @id @default(cuid())
+  shopId      String   @unique
+  provider    String   // e.g. "openai", "anthropic", "google"
+  apiKey      String   // Encrypted API key
+  model       String?  // Preferred model
+  maxTokens   Int?     // Max tokens per request
+  temperature Float?   // Temperature setting
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  shop Shop @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@map("ai_provider_configs")
+}
