@@ -1,0 +1,40 @@
+{
+  "name": "ownlingo",
+  "version": "1.0.0",
+  "description": "Shopify content translation system",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --runInBand",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:generate": "prisma generate",
+    "db:studio": "prisma studio"
+  },
+  "keywords": [
+    "shopify",
+    "translation",
+    "prisma"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "@shopify/shopify-api": "^11.8.0",
+    "graphql": "^16.10.0",
+    "graphql-request": "^6.1.0",
+    "pg": "^8.17.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.1.0",
+    "@types/pg": "^8.16.0",
+    "dotenv": "^17.2.3",
+    "jest": "^30.2.0",
+    "prisma": "^7.3.0",
+    "ts-jest": "^29.4.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
