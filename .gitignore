@@ -1,0 +1,23 @@
+.runtime/
+.claude/
+.beads/
+.logs/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage/
+
+# Prisma
+generated/
