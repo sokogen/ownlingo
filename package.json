@@ -21,6 +21,8 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "@shopify/shopify-api": "^11.8.0",
+    "graphql": "^16.10.0",
     "pg": "^8.17.2"
   },
   "devDependencies": {
