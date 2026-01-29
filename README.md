@@ -18,6 +18,17 @@ Includes pagination handling and content change detection using SHA-256 hashing.
 
 See [docs/shopify-content-fetcher.md](docs/shopify-content-fetcher.md) for detailed documentation.
 
+### ✅ Content Hash System (ol-004)
+
+Robust change detection and synchronization tracking:
+- SHA-256 content hashing for change detection
+- Sync status tracking per resource per locale (`synced`, `outdated`, `pending`, `error`)
+- Efficient queries to find untranslated/outdated content
+- Dashboard-friendly aggregations by locale and resource type
+- Automatic detection of content changes after Shopify updates
+
+See [docs/content-hash-system.md](docs/content-hash-system.md) for detailed documentation.
+
 ## Quick Start
 
 ```bash
@@ -43,18 +54,22 @@ src/
 │   ├── fetcher.ts         # Content fetcher with pagination
 │   └── queries.ts         # GraphQL queries
 ├── db/
-│   └── content-hash.ts    # Content hash repository
+│   ├── content-hash.ts    # Content hash repository
+│   └── sync-status.ts     # Sync status tracking
 └── index.ts               # Main exports
 
 tests/
 ├── shopify-fetcher.test.ts
-└── content-hash.test.ts
+├── content-hash.test.ts
+└── sync-status.test.ts
 
 examples/
-└── fetch-content.ts       # Usage example
+├── fetch-content.ts       # Shopify fetcher example
+└── content-hash-system.ts # Content hash system example
 
 docs/
-└── shopify-content-fetcher.md
+├── shopify-content-fetcher.md
+└── content-hash-system.md
 ```
 
 ## Environment Variables
@@ -68,29 +83,49 @@ DATABASE_URL="postgresql://user:password@localhost:5432/ownlingo"
 ## Usage Example
 
 ```typescript
-import { ShopifyGraphQLClient, ShopifyContentFetcher } from './src/index';
+import {
+  ShopifyGraphQLClient,
+  ShopifyContentFetcher,
+  ContentHashRepository,
+  SyncStatusRepository,
+  PrismaClient,
+} from './src/index';
 
-// Create client
+const prisma = new PrismaClient();
+
+// Create Shopify client
 const client = new ShopifyGraphQLClient({
   shop: 'your-store.myshopify.com',
   accessToken: 'your-access-token',
 });
 
-// Fetch content
+// Fetch content from Shopify
 const fetcher = new ShopifyContentFetcher(client);
 const resources = await fetcher.fetchAllTranslatableResources({
   resourceTypes: ['PRODUCT', 'COLLECTION'],
   pageSize: 50,
 });
 
-console.log(`Fetched ${resources.length} resources`);
+// Detect content changes
+const contentRepo = new ContentHashRepository(prisma);
+const stats = await contentRepo.storeTranslatableResources(shopId, resources);
+console.log(`New: ${stats.newContent}, Changed: ${stats.changedContent}`);
+
+// Find outdated translations
+const syncRepo = new SyncStatusRepository(prisma);
+const outdated = await syncRepo.getOutdatedTranslations(shopId, 'fr');
+console.log(`Outdated French translations: ${outdated.length}`);
+
+// Get dashboard statistics
+const agg = await syncRepo.getSyncAggregation(shopId);
+console.log(`Synced: ${agg.synced}/${agg.total}`);
 ```
 
 ## Roadmap
 
 - [x] ol-001: Database Schema
 - [x] ol-003: Shopify Content Fetcher
-- [ ] ol-004: Content Hash System
+- [x] ol-004: Content Hash System
 - [ ] ol-005: Translation Job Runner
 - [ ] ol-006: Shopify Translation Push
 - [ ] ol-007: AI Provider Integration

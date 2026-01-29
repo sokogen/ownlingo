@@ -10,6 +10,13 @@ export {
   PageInfo,
 } from './shopify/fetcher';
 export { ContentHashRepository } from './db/content-hash';
+export {
+  SyncStatusRepository,
+  SyncStatus,
+  TranslationSyncStatus,
+  SyncAggregation,
+  UntranslatedContent,
+} from './db/sync-status';
 
 // Re-export Prisma client for convenience
 export { PrismaClient } from '@prisma/client';
